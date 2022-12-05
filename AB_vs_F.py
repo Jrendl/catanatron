@@ -2,10 +2,12 @@
 the best AlphaBetaPlayer against the valueFunction player"""
 from typing import List, Dict, Tuple
 from tqdm import tqdm #python progress bar library
+import json
+import argparse
+from pathlib import Path
 from catanatron_core.catanatron import Game, Color
 from catanatron_experimental.machine_learning.players import minimax, mcts, value
 
-weights = value.DEFAULT_WEIGHTS
 
 #weights to vary: public_vps, production, enemy_production, 
 #   buildable_nodes, logest_road, 
@@ -56,11 +58,41 @@ def play_n(n: int, weights: Dict):
     else:
         return 'TIE', [win_count_AB, win_count_F]
 
+def vary_weight(weight: str, num_steps: int, step_size: float, mult= False):
+    outputs = {}
+    weights_dict = value.DEFAULT_WEIGHTS
+    if weight not in weights_dict.keys():
+        print(f'{weight} is not a valid weight')
+        return 
+    
+    for n in tqdm(range(1,num_steps+1)):
+        if mult:
+            print("multiplying")
+            weights_dict[weight] *= step_size
+        else:
+            print("adding")
+            weights_dict[weight] += step_size
+        print(f'{weight}:{weights_dict[weight]}')
+        outputs[f'{weight}:{weights_dict[weight]}'] = play_n(1000, weights_dict)
+        
+    return outputs
+
+def output(results: Dict, fileName: Path):
+    with fileName.open('w') as f:
+        json.dump(results, f)
 
 def main():
-    winner, counts = play_n(1000, weights)
-    print(f"w:{winner}: {counts[0]}-{counts[1]}")
+      #read optional arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-w", "--weight", help = "Weight name to vary", default = "longest_road")
+    parser.add_argument("-n", "--num_steps", help = "Number of steps for which to vary the weight.", default = 20)
+    parser.add_argument("-s", "--step_size", help = "Step size", default = 1)
+    parser.add_argument("-m", "--mult", help = "Multiply step size, default False", default = False)
+    parser.add_argument("-o", "--output", help ="output Filepath", default = "run")
+    args = parser.parse_args()
 
+    results = vary_weight(args.weight, int(args.num_steps), float(args.step_size), bool(args.mult))
+    output(results=results, fileName = Path(args.output))
 
 if __name__ == '__main__':
     main()
