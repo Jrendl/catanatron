@@ -34,7 +34,7 @@ from catanatron_experimental.machine_learning.players import minimax, mcts, valu
 # }
 
 def play_n(n: int, weights: Dict):
-    players = [ minimax.AlphaBetaPlayer(color=Color.RED, prunning=True, params=weights),
+    players = [ minimax.AlphaBetaPlayer(color=Color.RED, prunning=False, params=weights),
                 value.ValueFunctionPlayer(color=Color.BLUE)
             ]  
     win_count_AB = 0
@@ -73,7 +73,7 @@ def vary_weight(weight: str, num_steps: int, step_size: float, mult= False):
             print("adding")
             weights_dict[weight] += step_size
         print(f'{weight}:{weights_dict[weight]}')
-        outputs[f'{weight}:{weights_dict[weight]}'] = play_n(1000, weights_dict)
+        outputs[f'{weight}:{weights_dict[weight]}'] = play_n(500, weights_dict)
         
     return outputs
 
